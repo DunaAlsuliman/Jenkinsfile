@@ -1,0 +1,66 @@
+pipeline {
+ 
+  // Jenkins main agent
+  agent { label 'agents-grb' }
+ 
+  // Set pipeline options
+  options {
+    skipDefaultCheckout ()
+    disableConcurrentBuilds ()
+  }
+ 
+  // Set pipeline environment variables
+  // environment {
+
+   
+  // }
+ 
+  //
+  stages {
+ 
+    // Checkout code repository from bitbucket
+    stage ('Code Checkout') {
+      steps{
+
+
+        checkout([$class: 'GitSCM',
+        branches: [[name: 'main']], 
+        doGenerateSubmoduleConfigurations: false, 
+        extensions: [], 
+        userRemoteConfigs: [[url: 'https://github.com/DunaAlsuliman/Elegant-Calculator.git']]])
+        
+      }
+    }
+ 
+    // Code Compile
+    stage ('Code Compile') {
+      steps {
+        bat 'gradlew clean bundleRelease' 
+      }
+    }
+
+
+    stage('Publish to Google Play') {
+        steps {
+            script {
+              // Configure Google Play Android Publisher Plugin
+
+              androidApkUpload googleCredentialsId: 'b10c7b19-b2b8-4529-b14a-3c1e857783e8',
+              filesPattern: '**/build/outputs/**/*.aab',
+              trackName: 'alpha',
+              rolloutPercentage: '100'
+
+            }
+        }
+        }
+  }
+ 
+  // pipeline Post action
+  // post {
+  //   always {
+  //     // This section always delete workspace file to save disk storage
+  //     cleanWs ()
+  //   }
+  // }
+ 
+}
